@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
+<meta name="description" content="Cada uno juega desde su celu, en la misma partida.">
+<meta property="og:title" content="Adiviná qué dice el otro · Celu">
+<meta property="og:description" content="Cada uno juega desde su celu, en la misma partida.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ivanbonadeo.github.io/correo-aereo/">
+<meta property="og:image" content="https://ivanbonadeo.github.io/correo-aereo/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Adiviná desde el celu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Correo aéreo en el bolsillo: una postal por pantalla, botones grandes para el pulgar, revelación a pantalla completa para mostrar a la cámara */
+  --night:#14213d;
+  --night-2:#1f3058;
+  --paper:#fbf7ee;
+  --ink:#1b2440;
+  --ink-soft:#5a6280;
+  --red:#d64933;
+  --blue:#2e5aac;
+  --gold:#f2b84b;
+  --ok:#2f8f5b;
+  --font-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --font-hand:"Caveat","Segoe Print",cursive;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow-x:hidden}
+body{background:var(--night);color:var(--paper);font-family:var(--font-display);
+  background-image:radial-gradient(circle at 15% 0%,rgba(242,184,75,.10),transparent 45%);}
+button,input,textarea{font-family:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.app{min-height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px;
+  padding:calc(14px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom))}
+[hidden]{display:none !important}
+
+/* barra de vuelo */
+.flight{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px}
+.flight .c{font-family:var(--font-hand);font-size:20px;color:rgba(251,247,238,.55);line-height:1;text-align:center}
+.flight .c.me{color:var(--gold)}
+.flight .c small{display:block;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.track{position:relative;height:26px;margin:0 14px}
+.track::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed rgba(251,247,238,.35)}
+.track .done{position:absolute;left:0;top:50%;height:2px;margin-top:-1px;background:var(--gold);transition:width .8s}
+.plane{position:absolute;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;transition:left .8s}
+.wp{position:absolute;top:50%;transform:translateX(-50%)}
+.wp i{display:block;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:var(--night);border:2px solid rgba(251,247,238,.5)}
+.wp em{display:none}
+.wp.on i{background:var(--gold);border-color:var(--gold)}
+.next{font-size:13px;color:rgba(251,247,238,.7);text-align:center;margin-top:2px}
+.next b{color:var(--gold)}
+.arrive{background:var(--night);color:var(--paper);border-radius:16px;padding:16px 20px;max-width:360px;text-align:center;display:grid;gap:4px}
+.arrive .k{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.arrive .c{font-family:var(--font-hand);font-size:44px;line-height:1}
+.arrive .l{font-size:16px;line-height:1.35;opacity:.85}
+.sub{display:flex;justify-content:space-between;font-size:13px;color:rgba(251,247,238,.65);font-variant-numeric:tabular-nums}
+.sub b{color:var(--gold)}
+
+/* postal */
+.airmail{padding:9px;border-radius:12px;
+  background:repeating-linear-gradient(135deg,var(--red) 0 16px,var(--paper) 16px 25px,var(--blue) 25px 41px,var(--paper) 41px 50px)}
+.card{background:var(--paper);color:var(--ink);border-radius:5px;padding:20px 18px;display:flex;flex-direction:column;gap:14px}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+h1{font-size:40px;line-height:.98;letter-spacing:-.03em;margin:4px 0 0;text-wrap:balance}
+h1 em{font-family:var(--font-hand);font-style:normal;color:var(--gold);font-size:1.15em}
+.lead{font-size:17px;line-height:1.4;color:rgba(251,247,238,.82);margin:0}
+.q{font-size:clamp(24px,6.6vw,31px);font-weight:800;line-height:1.14;letter-spacing:-.01em;text-wrap:balance;margin:0}
+.chip{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;border-radius:999px;padding:5px 10px}
+.role{display:flex;align-items:center;gap:10px;border-radius:12px;padding:12px 14px;font-size:18px;line-height:1.25}
+.role b{font-size:22px}
+.role.guess{background:#e8eefb;color:var(--blue)}
+.role.answer{background:#fbe7e2;color:#a8341f}
+.hint{font-size:16px;line-height:1.4;color:var(--ink-soft);margin:0}
+
+/* botones */
+.big{border:0;border-radius:14px;min-height:60px;padding:14px 18px;font-size:20px;font-weight:800;background:var(--gold);color:var(--night);width:100%}
+.big:active{transform:scale(.98)}
+.big.alt{background:var(--blue);color:#fff}
+.big.ghost{background:transparent;border:2px solid rgba(251,247,238,.3);color:var(--paper);font-weight:600;min-height:50px;font-size:17px}
+.stack{display:grid;gap:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{border:3px solid #d8d0bd;background:#fff;color:var(--ink);border-radius:14px;min-height:76px;padding:12px;font-size:19px;font-weight:800;line-height:1.2}
+.choice[aria-pressed=true]{border-color:var(--blue);background:#e8eefb}
+.who{min-height:120px;font-size:30px;font-family:var(--font-hand);font-weight:700}
+.score3{display:grid;gap:10px}
+.s-hit{background:var(--ok);color:#fff}
+.s-mid{background:var(--gold);color:var(--night)}
+.s-miss{background:var(--red);color:#fff}
+textarea{width:100%;min-height:110px;border:2px dashed #c8c0ad;border-radius:12px;background:#fff;color:var(--ink);font-family:var(--font-hand);font-size:28px;line-height:1.15;padding:10px 12px;resize:none}
+.code{width:100%;text-align:center;font-size:56px;font-weight:800;letter-spacing:.3em;border:0;border-bottom:3px dashed #c8c0ad;background:transparent;color:var(--ink);padding:4px 0 4px .3em}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{border:2px solid #d8d0bd;background:#fff;color:var(--ink);border-radius:10px;padding:10px 4px;font-size:15px;font-weight:700;line-height:1.2}
+.seg button small{display:block;font-weight:400;font-size:12px;color:var(--ink-soft)}
+.seg button[aria-pressed=true]{border-color:var(--blue);background:#e8eefb}
+.lock{display:flex;align-items:center;gap:12px;background:#eef6f0;color:#1f6b43;border-radius:12px;padding:14px;font-size:17px;font-weight:600;line-height:1.3}
+.lock svg{flex:none}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:rgba(251,247,238,.6)}
+.nav button{background:transparent;border:2px solid rgba(251,247,238,.25);color:var(--paper);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:600}
+.linkish{background:none;border:0;color:rgba(251,247,238,.7);text-decoration:underline;font-size:14px;padding:6px;justify-self:center}
+
+/* revelación a pantalla completa */
+.reveal{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;text-align:center;
+  padding:calc(24px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom));background:var(--blue);color:#fff;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.reveal .rl{font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.reveal .rv{font-size:clamp(40px,13vw,76px);font-weight:800;line-height:1.02;letter-spacing:-.02em;text-wrap:balance;overflow-wrap:anywhere}
+.reveal .rv.hand{font-family:var(--font-hand);font-weight:700;font-size:clamp(44px,13vw,84px)}
+.reveal .big{max-width:360px}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+.postmark{align-self:center;width:150px;height:150px;border-radius:50%;border:5px double currentColor;display:grid;place-items:center;text-align:center;
+  font-weight:800;font-size:22px;line-height:1.05;text-transform:uppercase;transform:rotate(-12deg);animation:stamp .45s cubic-bezier(.2,1.6,.4,1)}
+.postmark small{display:block;font-size:12px;letter-spacing:.1em;margin-top:4px}
+@keyframes stamp{from{transform:rotate(-30deg) scale(2);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <section class="flight" id="flight" hidden aria-label="Sintonía de la pareja">
+    <span class="c" id="fA">Ivan</span>
+    <div>
+      <div class="track"><div class="done" id="done" style="width:0%"></div><div id="wps"></div>
+        <svg class="plane" id="plane" style="left:0%" viewBox="0 0 24 24" aria-hidden="true"><path fill="#f2b84b" d="M21.5 13.2v-1.9l-8.2-5V1.9C13.3 1.1 12.7.5 12 .5s-1.3.6-1.3 1.4v4.4l-8.2 5v1.9l8.2-2.5v4.6l-2.2 1.6v1.6L12 18l3.5.9v-1.6l-2.2-1.6v-4.6z" transform="rotate(90 12 12)"/></svg>
+      </div>
+      <div class="sub"><span>Partida <b id="fCode">000</b> · <span id="fLen">Medio</span></span><span id="fProg">1 de 16</span></div>
+      <div class="next" id="fNext">Próxima escala: <b>Montevideo</b></div>
+    </div>
+    <span class="c" id="fB">Fran</span>
+  </section>
+
+  <main id="view" class="stack" style="gap:16px"></main>
+</div>
+<div id="overlay"></div>
+
+<script>
+const LEVELS=[
+  {n:1,t:"Preguntas absurdas",color:"#d64933",kind:"open",d:"Hipótesis ridículas. No hay respuesta correcta, solo la del otro."},
+  {n:2,t:"¿Quién de los dos?",color:"#2e5aac",kind:"who",d:"El que responde elige quién de los dos. El que adivina elige qué cree que va a elegir el otro."},
+  {n:3,t:"¿Qué preferís?",color:"#7a4ea3",kind:"pick",d:"Dos opciones. Los dos eligen en secreto y después muestran el celu a la vez."},
+  {n:4,t:"Nosotros",color:"#2f8f5b",kind:"open",d:"Recuerdos, planes y lo que nos va a seguir haciendo reír de viejos."},
+  {n:5, t:"Solo vos sabés", c:"l5", color:"#b8456f", kind:"open", d:"¿Cuánto conocés al otro? Acá sí hay respuesta correcta."},
+  {n:6, t:"A la distancia", c:"l6", color:"#1f7a85", kind:"open", d:"Lo que se extraña, lo que se espera y lo que viene."}
+];
+const Q=[
+  [1,"ambos","¿Preferís las fracciones o los decimales?"],
+  [1,"ambos","Si yo fuera una flor y vos fueras alérgico al polen, ¿igual pasarías tiempo conmigo?"],
+  [1,"ambos","Si te tuvieras que volver 2D, ¿qué dimensión perderías?"],
+  [1,"ambos","¿De qué color es tu enjuague bucal favorito?"],
+  [1,"ambos","¿Cuál es la edad más avanzada a la que viste a un perro aprender un truco nuevo?"],
+  [1,"ambos","Si tuvieras que preparar a un extraterrestre para venir a la Tierra y solo le pudieras decir 5 cosas, ¿cuáles serían?"],
+  [1,"ambos","¿Cuánta gente que conocemos creés que tiene banderines de cumpleaños guardados en su casa?"],
+  [1,"ambos","¿Cuál es la comida que peor quedaría convertida en sopa?"],
+  [1,"ambos","Si pudieras estirar cualquier vehículo como una limusina, ¿cuál elegirías?"],
+  [1,"ambos","¿Seguirías conmigo si solo pudiera hablar con frases de Los Simpson, sea cual sea la ocasión?"],
+  [1,"ambos","Jugamos al juego de la silla, queda una sola y la música para justo cuando estamos los dos encima. ¿Me la dejás o sentís que es tuya por derecho?"],
+  [1,"ella","¿Me seguirías queriendo si nunca más me pudiera crecer la barba?"],
+  [1,"ambos","Si un día me despierto y solo puedo hablar en acertijos, ¿cuánto tiempo me aguantarías?"],
+  [1,"ambos","Si me convirtiera en paloma, ¿me dejarías hacerte caca en la cabeza?"],
+  [1,"ambos","¿Me seguirías queriendo si mañana me despierto con 20 años más y vos seguís igual?"],
+  [1,"ambos","¿Me seguirías queriendo si de repente me diera alergia a todas tus comidas favoritas?"],
+  [2,"ambos","¿Quién de los dos se las arreglaría mejor para agarrar un pájaro sin lastimarlo?"],
+  [2,"ambos","Vamos por la ruta y aparecen vacas. ¿Quién grita «¡VACAS!» primero?"],
+  [2,"ambos","Si fuéramos sombreros, ¿quién tendría el ala más ancha?"],
+  [2,"ambos","¿Quién podría vivir con menos utensilios de cocina?"],
+  [2,"ambos","¿Quién es más probable que caiga sin querer en una estafa piramidal?"],
+  [2,"ambos","¿Quién intentó hacer más medialunas en su vida?"],
+  [2,"ambos","¿A quién le molestaría más tener que sentarse al lado de un desconocido en el cine?"],
+  [2,"ambos","¿Quién es más probable que tenga más de 1.000 mails sin leer?"],
+  [2,"ambos","Si fuéramos baños, ¿quién tendría las juntas de los azulejos más prolijas?"],
+  [2,"ambos","¿A quién le molestaría más un error de continuidad en una peli o una serie?"],
+  [2,"ambos","En uno de esos concursos donde gana el que aguanta más tiempo tocando un objeto, ¿quién se aburre y se va primero?"],
+  [2,"ambos","¿Quién de los dos sobreviviría menos en una isla desierta? (Con honestidad.)"],
+  [2,"ambos","Si trabajáramos juntos, ¿a quién echarían primero?"],
+  [2,"ambos","¿Quién haría más papelón en un programa de juegos en la tele?"],
+  [2,"ambos","Si intercambiáramos placares por una semana, ¿quién se quejaría primero?"],
+  [3,"ambos","¿Qué preferís: casarte conmigo mañana o no verme por 10 años?",["Casarnos mañana","10 años sin vernos"]],
+  [3,"ambos","¿Qué preferís: leer todos mis pensamientos durante un día o que yo lea los tuyos?",["Leer los tuyos","Que leas los míos"]],
+  [3,"ambos","¿Qué preferís: perder todas nuestras fotos juntos o todos nuestros mensajes?",["Perder las fotos","Perder los mensajes"]],
+  [3,"ambos","¿Qué preferís: que yo planee todas nuestras citas o todos nuestros viajes?",["Todas las citas","Todos los viajes"]],
+  [3,"ella","¿Qué preferís: que yo elija todo tu maquillaje o toda tu ropa por el resto de tu vida?",["El maquillaje","La ropa"]],
+  [3,"ambos","¿Qué preferís: salir siempre con la ropa combinada o con el mismo peinado?",["Ropa combinada","Mismo peinado"]],
+  [4,"ambos","Si nos hiciéramos millonarios de un día para el otro, ¿qué es lo más innecesario que compraríamos?"],
+  [4,"ambos","¿Qué es lo más gracioso que hago sin darme cuenta?"],
+  [4,"ambos","Si nuestra relación fuera un reality, ¿cómo lo llamarían los productores?"],
+  [4,"ambos","¿Cuáles serían las peores vacaciones que podríamos planear?"],
+  [4,"ambos","Si tuviéramos un restaurante, ¿cuál sería el plato ridículo del menú?"],
+  [4,"ambos","¿En qué me tengo demasiada confianza sin ningún motivo?"],
+  [4,"ambos","¿Cuál es el recuerdo más gracioso de cuando empezamos a salir?"],
+  [4,"ambos","¿Qué compra ridícula nos emocionaría a los dos en secreto?"],
+  [4,"ambos","Si pudiéramos teletransportarnos a cualquier lugar a cenar esta noche, ¿adónde iríamos?"],
+  [4,"ambos","¿Cuál es la competencia más random que podríamos hacer entre nosotros?"],
+  [4,"ambos","¿De qué nos vamos a seguir riendo cuando tengamos 80?"],
+  // Escala 5: solo vos sabés
+  [5,"ambos","¿Cuál es tu comida favorita de toda la vida?"],
+  [5,"ambos","¿Qué es lo primero que hacés a la mañana cuando te levantás?"],
+  [5,"ambos","Si pudieras escuchar una sola canción por el resto de tu vida, ¿cuál sería?"],
+  [5,"ambos","¿Cuál es tu miedo más irracional?"],
+  [5,"ambos","¿Qué te pone de mal humor más rápido que cualquier cosa?"],
+  [5,"ambos","Si tuvieras un día libre sin nada que hacer, ¿qué harías?"],
+  [5,"ambos","¿Dónde fue nuestra primera cita y qué pedimos?"],
+  [5,"ambos","¿Quién dijo «te quiero» primero, y dónde?"],
+  [5,"ambos","¿Cuál fue nuestra primera pelea tonta?"],
+  [5,"ambos","¿Qué apodo o chiste interno usamos más?"],
+  [5,"ambos","¿Qué fue lo primero que pensaste de mí cuando me conociste?"],
+  [5,"ambos","¿En qué momento te diste cuenta de que te gustaba?"],
+  [5,"ambos","¿Cuál es «nuestra» canción?"],
+  [5,"ambos","¿Qué fue lo primero que me regalaste?"],
+  [5,"ambos","¿Cuál es tu foto favorita de los dos juntos?"],
+  [5,"ambos","¿Qué salida o viaje juntos es el que más te quedó grabado?"],
+  [5,"ambos","¿Qué es lo que más te hace reír de mí?"],
+  [5,"ambos","¿Qué peli o serie que vimos juntos es la que más disfrutaste?"],
+  // Escala 6: a la distancia
+  [6,"ambos","¿Qué es lo que más extrañás de mí en el día a día?"],
+  [6,"ambos","¿Qué es lo primero que vamos a hacer cuando nos volvamos a ver?"],
+  [6,"ambos","¿A qué hora del día pensás más en mí?"],
+  [6,"ambos","¿Qué cosa de mi vida de este lado te da más curiosidad?"],
+  [6,"ambos","¿Qué comida de mi lado te gustaría que te llevara en la valija?"],
+  [6,"ambos","¿Cuál fue la videollamada más larga o más rara que tuvimos?"],
+  [6,"ambos","¿Qué lugar de tu ciudad me querés mostrar primero?"],
+  [6,"ambos","¿Qué es lo más difícil de la distancia para vos?"],
+  [6,"ambos","¿Qué ritual nuestro te hace sentir más cerca?"],
+  [6,"ambos","Cuando nos veamos, ¿qué comida es obligatoria el primer día?"],
+  [6,"ambos","¿Qué mensaje mío es el que más te gusta recibir?"],
+  [6,"ambos","¿Qué te gustaría que hagamos juntos que todavía no hicimos?"],
+  [6,"ambos","Si pudieras aparecer al lado mío por una hora ahora mismo, ¿qué haríamos?"],
+  [6,"ambos","¿Qué cosa de la distancia nos hizo más fuertes?"]
+];
+// Ruta Buenos Aires → Madrid. f = fracción del camino; el avión llega a Madrid con el 70% de los puntos posibles.
+const ROUTE={km:10040,goal:0.7,stops:[
+  {f:.10,c:"Montevideo",l:"Cruzaron el charco. Ya se siente olor a mate."},
+  {f:.28,c:"Río de Janeiro",l:"Escala en Río: caipirinha y foto con el Cristo."},
+  {f:.45,c:"Recife",l:"Última parada en Brasil antes del océano."},
+  {f:.62,c:"Cabo Verde",l:"Mitad del Atlántico. Ya no hay vuelta atrás."},
+  {f:.80,c:"Islas Canarias",l:"¡Tierra española a la vista!"},
+  {f:.91,c:"Lisboa",l:"Un pastel de nata y seguimos, que falta poquito."},
+  {f:1,c:"Madrid",l:"¡Aterrizaron! Por fin juntos."}]};
+function routeFrac(pts,max){return max>0?Math.min(1,pts/(ROUTE.goal*max)):0}
+function stopIndex(fr){let k=-1;ROUTE.stops.forEach((s,i)=>{if(fr>=s.f-1e-9)k=i});return k}
+function stopName(k){return k<0?"Buenos Aires":ROUTE.stops[k].c}
+function stopsMarkup(){return ROUTE.stops.slice(0,-1).map((s,i)=>`<span class="wp" data-i="${i}" style="left:${s.f*100}%"><i></i><em>${s.c}</em></span>`).join("")}
+function markStops(fr){document.querySelectorAll(".wp").forEach(w=>w.classList.toggle("on",fr>=ROUTE.stops[+w.dataset.i].f-1e-9))}
+const LENS={2:"Corto",4:"Medio",99:"Largo"};
+const KEY="adivina-celu-v1";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LOCK='<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z"/></svg>';
+
+// ---------- azar con semilla: mismo código = misma partida en los dos celus ----------
+function seedFrom(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return h>>>0}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function buildDeck(code,per){
+  const r=rng(seedFrom("adivina|"+code+"|"+per));
+  let deck=[];
+  LEVELS.forEach(l=>{
+    const qs=Q.map((q,i)=>i).filter(i=>Q[i][0]===l.n);
+    for(let i=qs.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]]}
+    deck=deck.concat(qs.slice(0,per));
+  });
+  // quién responde cada pregunta (0 = jugador A, 1 = jugador B), alternando; "ella" siempre B
+  let turn=r()<.5?0:1; const ans=[];
+  deck.forEach(i=>{ if(Q[i][1]==="ella"){ans.push(1)} else {ans.push(turn);turn=1-turn} });
+  return {deck,ans};
+}
+
+// ---------- estado ----------
+let S=load()||{step:"who",A:"Ivan",B:"Fran",me:null,code:"",per:4,i:0,phase:"play",pick:null,bet:"",pts:0,answered:0,scored:{},seenLevel:0};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(_){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");return s&&s.step?s:null}catch(_){return null}}
+let D=null;
+function deck(){if(!D||D.code!==S.code||D.per!==S.per){D=Object.assign(buildDeck(S.code,S.per),{code:S.code,per:S.per})}return D}
+const myName=()=>S.me===0?S.A:S.B, otherName=()=>S.me===0?S.B:S.A;
+
+function go(patch){Object.assign(S,patch);save();render()}
+
+// ---------- pantallas ----------
+function render(){
+  $("overlay").innerHTML="";
+  const v=$("view");
+  $("flight").hidden = !(S.step==="game"||S.step==="level"||S.step==="end");
+  if(S.step==="who") return whoView(v);
+  if(S.step==="code") return codeView(v);
+  if(S.step==="level") return levelView(v);
+  if(S.step==="end") return endView(v);
+  return gameView(v);
+}
+
+function whoView(v){
+  const saved=load();
+  v.innerHTML=`
+    <div><h1>Adiviná qué dice <em>el otro</em></h1></div>
+    <p class="lead">Cada uno juega desde su celu, mientras siguen en la videollamada.</p>
+    <div class="airmail"><div class="card">
+      <span class="lbl">¿Quién sos?</span>
+      <div class="two">
+        <button class="choice who" data-me="0">${esc(S.A)}</button>
+        <button class="choice who" data-me="1">${esc(S.B)}</button>
+      </div>
+    </div></div>
+    <button class="linkish" id="rename">Cambiar los nombres</button>
+    <a class="linkish" href="index.html" style="text-align:center">← Volver al inicio</a>`;
+  v.querySelectorAll("[data-me]").forEach(b=>b.onclick=()=>go({me:+b.dataset.me,step:"code"}));
+  $("rename").onclick=renameView;
+}
+function renameView(){
+  $("view").innerHTML=`
+    <div class="airmail"><div class="card">
+      <span class="lbl">Nombres</span>
+      <label class="lbl" for="nA">Jugador 1</label><input id="nA" class="code" style="font-size:30px;letter-spacing:0;padding:0;font-family:var(--font-hand)" value="${esc(S.A)}" autocomplete="off">
+      <label class="lbl" for="nB">Jugadora 2 (las preguntas «para ella» le tocan a ella)</label><input id="nB" class="code" style="font-size:30px;letter-spacing:0;padding:0;font-family:var(--font-hand)" value="${esc(S.B)}" autocomplete="off">
+      <button class="big" id="ok">Listo</button>
+    </div></div>`;
+  $("ok").onclick=()=>go({A:$("nA").value.trim()||"Ivan",B:$("nB").value.trim()||"Fran",step:"who"});
+}
+
+function codeView(v){
+  v.innerHTML=`
+    <div class="airmail"><div class="card">
+      <span class="lbl">Hola, ${esc(myName())}</span>
+      <p class="q" style="font-size:24px">Pongan los dos el mismo número</p>
+      <p class="hint">Uno inventa un número de 3 cifras y se lo dice al otro por la llamada. Así a los dos les salen las mismas preguntas.</p>
+      <input id="code" class="code" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="000" value="${esc(S.code)}" autocomplete="off" aria-label="Número de partida">
+      <span class="lbl" id="lenL">Duración (elijan la misma)</span>
+      <div class="seg" role="group" aria-labelledby="lenL">
+        ${[2,4,99].map(n=>`<button type="button" data-n="${n}" aria-pressed="${S.per===n}">${LENS[n]}<small>${n===99?"las "+Q.length:(n*LEVELS.length)+" preguntas"}</small></button>`).join("")}
+      </div>
+      <button class="big" id="startBtn">Empezar</button>
+      <p class="hint" id="err" style="color:var(--red);min-height:1.4em"></p>
+    </div></div>
+    <button class="linkish" id="back">Volver</button>`;
+  v.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{S.per=+b.dataset.n;save();v.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  const inp=$("code");
+  inp.oninput=()=>{inp.value=inp.value.replace(/\D/g,"").slice(0,3)};
+  $("startBtn").onclick=()=>{
+    const c=inp.value.replace(/\D/g,"");
+    if(c.length!==3){$("err").textContent="Tiene que tener 3 números, por ejemplo 482.";inp.focus();return}
+    go({code:c,i:0,pts:0,answered:0,scored:{},phase:"play",pick:null,bet:"",seenLevel:0,step:"level"});
+  };
+  $("back").onclick=()=>go({step:"who"});
+}
+
+function cur(){const d=deck();const qi=d.deck[S.i];return{q:Q[qi],L:LEVELS[Q[qi][0]-1],iAnswer:d.ans[S.i]===S.me}}
+
+function updateFlight(){
+  const d=deck(); const fr=routeFrac(S.pts,d.deck.length*2);
+  if(!$("wps").childElementCount) $("wps").innerHTML=stopsMarkup();
+  $("plane").style.left=(fr*100)+"%"; $("done").style.width=(fr*100)+"%"; markStops(fr);
+  const k=stopIndex(fr);
+  $("fNext").innerHTML = k>=ROUTE.stops.length-1 ? "<b>¡Aterrizaron en Madrid!</b>" : `${Math.round(fr*ROUTE.km).toLocaleString("es-AR")} km · próxima escala: <b>${esc(ROUTE.stops[k+1].c)}</b>`;
+  $("fA").innerHTML=esc(S.A)+(S.me===0?"<small>vos</small>":""); $("fB").innerHTML=esc(S.B)+(S.me===1?"<small>vos</small>":"");
+  $("fA").classList.toggle("me",S.me===0); $("fB").classList.toggle("me",S.me===1);
+  $("fCode").textContent=S.code; $("fLen").textContent=LENS[S.per];
+  $("fProg").textContent=`${Math.min(S.i+1,d.deck.length)} de ${d.deck.length}`;
+}
+
+function levelView(v){
+  updateFlight();
+  const {L}=cur();
+  const levels=[...new Set(deck().deck.map(i=>Q[i][0]))];
+  v.innerHTML=`
+    <div class="airmail"><div class="card" style="gap:16px">
+      <span class="chip" style="background:${L.color}">Escala ${levels.indexOf(L.n)+1} de ${levels.length}</span>
+      <p class="q" style="color:${L.color};font-size:36px">${L.t}</p>
+      <p class="hint" style="font-size:18px">${L.d}</p>
+      ${S.i===0?`<div class="lock" style="background:#fdf1d8;color:#7a5414;flex-direction:column;align-items:flex-start;gap:6px">
+        <span>Antes de arrancar, chequeen que los dos vean lo mismo:</span>
+        <b style="font-size:20px">Partida ${esc(S.code)} · ${LENS[S.per]}</b>
+        <span>Y que cada uno sea una persona distinta. Vos sos <b>${esc(myName())}</b>.</span></div>`:""}
+      <button class="big" id="go">Vamos</button>
+    </div></div>`;
+  $("go").onclick=()=>go({seenLevel:L.n,step:"game"});
+}
+
+function gameView(v){
+  updateFlight();
+  const d=deck();
+  if(S.i>=d.deck.length) return go({step:"end"});
+  const {q,L,iAnswer}=cur();
+  const other=otherName();
+  const role = iAnswer
+    ? `<div class="role answer"><span>Vos <b>respondés</b>. ${esc(other)} adivina.</span></div>`
+    : `<div class="role guess"><span>Vos <b>adivinás</b> qué va a responder ${esc(other)}.</span></div>`;
+  let body="";
+  if(S.phase==="score") body=scoreBlock(L);
+  else if(L.kind==="who"||L.kind==="pick"){
+    const opts=L.kind==="who"?[S.A,S.B]:q[3];
+    const prompt=iAnswer?"Elegí tu respuesta de verdad, en secreto:":`¿Qué va a elegir ${esc(other)}?`;
+    if(S.pick===null){
+      body=`<p class="hint">${prompt}</p><div class="two">${opts.map((o,k)=>`<button class="choice" data-k="${k}">${esc(o)}</button>`).join("")}</div>`;
+    } else {
+      body=`<div class="lock">${LOCK}<span>Elegiste en secreto. Cuando los dos estén listos, cuenten hasta 3 y toquen <em>Mostrar</em>.</span></div>
+        <button class="big alt" id="show">Mostrar a la cámara</button>
+        <button class="linkish" id="redo" style="color:var(--ink-soft)">Me equivoqué, elegir de nuevo</button>`;
+    }
+  } else { // pregunta abierta
+    if(iAnswer){
+      body=`<p class="hint">Pensá tu respuesta, pero <b>no la digas todavía</b>. Esperá a que ${esc(other)} escriba su apuesta y diga «listo».</p>
+        <button class="big" id="said">Ya la dije en voz alta</button>`;
+    } else if(!S.bet){
+      body=`<label class="hint" for="bet">Escribí lo que creés que va a responder ${esc(other)}. No se lo muestres.</label>
+        <textarea id="bet" placeholder="Mi apuesta…" maxlength="140"></textarea>
+        <button class="big" id="saveBet">Listo, la escondí</button>`;
+    } else {
+      body=`<div class="lock">${LOCK}<span>Apuesta escondida. Decí «listo» y pedile a ${esc(other)} que responda en voz alta.</span></div>
+        <button class="big alt" id="show">Mostrar mi apuesta</button>`;
+    }
+  }
+  v.innerHTML=`
+    <div class="airmail"><div class="card">
+      <span class="chip" style="background:${L.color}">${L.t}</span>
+      <p class="q">${esc(q[2])}</p>
+      ${q[1]==="ella"?`<span class="lbl" style="color:#7a5414">Esta es para ${esc(S.B)}</span>`:""}
+      ${role}
+      ${body}
+    </div></div>
+    <div class="nav">
+      <button id="prev">Anterior</button>
+      <span>¿Desfasados? Muévanse acá</span>
+      <button id="skip">Saltear</button>
+    </div>
+    <button class="linkish" id="quit">Terminar partida</button>`;
+  // eventos
+  v.querySelectorAll(".choice[data-k]").forEach(b=>b.onclick=()=>go({pick:+b.dataset.k}));
+  if($("redo")) $("redo").onclick=()=>go({pick:null});
+  if($("said")) $("said").onclick=()=>go({phase:"score"});
+  if($("saveBet")) $("saveBet").onclick=()=>{const t=$("bet").value.trim(); if(!t){$("bet").focus();$("bet").placeholder="Escribí algo, aunque sea corto";return} go({bet:t})};
+  if($("show")) $("show").onclick=()=>showReveal(L,q,iAnswer);
+  v.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>score(+b.dataset.s));
+  $("prev").onclick=()=>{ if(S.i>0) move(S.i-1) };
+  $("skip").onclick=()=>move(S.i+1);
+  $("quit").onclick=()=>go({step:"end"});
+}
+
+function scoreBlock(L){
+  const both = L.kind!=="open";
+  return `<p class="hint">${both?"¿Coincidieron?":"¿Le pegó a la respuesta?"} (Marquen lo mismo en los dos celus.)</p>
+    <div class="score3">
+      <button class="big s-hit" data-s="2">${both?"¡Coincidimos!":"¡Clavada!"}</button>
+      ${both?"":`<button class="big s-mid" data-s="1">Más o menos</button>`}
+      <button class="big s-miss" data-s="0">${both?"No coincidimos":"Ni cerca"}</button>
+    </div>`;
+}
+
+function showReveal(L,q,iAnswer){
+  const val = (L.kind==="open") ? S.bet : (L.kind==="who"?[S.A,S.B]:q[3])[S.pick];
+  const lab = (L.kind==="open") ? `La apuesta de ${esc(myName())}` : (iAnswer?`${esc(myName())} responde`:`${esc(myName())} apuesta`);
+  const bg = iAnswer ? "var(--red)" : "var(--blue)";
+  $("overlay").innerHTML=`<div class="reveal" style="background:${bg}" role="dialog" aria-label="Respuesta revelada">
+      <span class="rl">${lab}</span>
+      <span class="rv ${L.kind==="open"?"hand":""}">${esc(val)}</span>
+      <span class="rl" style="text-transform:none;letter-spacing:0;font-size:16px">Mostrale el celu a la cámara</span>
+      <button class="big" id="closeRev" style="background:#fff;color:var(--ink)">Seguir</button>
+    </div>`;
+  $("closeRev").onclick=()=>go({phase:"score"});
+}
+
+function score(s){
+  const tot=deck().deck.length*2, before=stopIndex(routeFrac(S.pts,tot));
+  if(S.scored[S.i]===undefined){S.pts+=s;S.answered++}
+  else {S.pts+=s-S.scored[S.i]}
+  S.scored[S.i]=s; save();
+  const txt = s===2?["¡Clavada!","+2 · telepatía","#2f8f5b"]:s===1?["Casi","+1 · cerquita","#b07a12"]:["Ni cerca","0 · turbulencia","#d64933"];
+  $("overlay").innerHTML=`<div class="reveal" style="background:var(--paper);color:${txt[2]}">
+      <div class="postmark">${txt[0]}<small>${txt[1]}</small></div>
+      ${(()=>{const a=stopIndex(routeFrac(S.pts,tot)); if(a<=before) return ""; const st=ROUTE.stops[a];
+        return `<div class="arrive"><span class="k">Nueva escala</span><span class="c">${esc(st.c)}</span><span class="l">${esc(st.l)}</span></div>`})()}
+      <button class="big" id="nextBtn" style="max-width:360px">Siguiente pregunta</button>
+    </div>`;
+  updateFlight();
+  $("nextBtn").onclick=()=>move(S.i+1);
+}
+
+function move(i){
+  const d=deck();
+  S.i=Math.max(0,i); S.phase="play"; S.pick=null; S.bet="";
+  if(S.i>=d.deck.length){return go({step:"end"})}
+  const lv=Q[d.deck[S.i]][0];
+  if(lv!==S.seenLevel && S.i>0 && Q[d.deck[S.i-1]][0]!==lv){S.seenLevel=lv;return go({step:"level"})}
+  go({step:"game"});
+}
+
+function endView(v){
+  updateFlight();
+  const pct=S.answered?Math.round(S.pts/(S.answered*2)*100):0;
+  let t; if(pct>=85)t="telepatía de pareja de 50 años";else if(pct>=65)t="se conocen de memoria";else if(pct>=45)t="muy bien sintonizados";else if(pct>=25)t="hay señal, con algo de interferencia";else t="hay que jugar más seguido";
+  const fr=routeFrac(S.pts,deck().deck.length*2), ek=stopIndex(fr);
+  const dest = ek>=ROUTE.stops.length-1 ? "¡Aterrizaron en Madrid!" : ek<0 ? "El avión recién despega" : `Llegaron hasta ${stopName(ek)}`;
+  const hits=Object.values(S.scored).filter(x=>x===2).length;
+  v.innerHTML=`
+    <div class="airmail"><div class="card" style="gap:12px">
+      <span class="lbl">Partida ${esc(S.code)} · fin del vuelo</span>
+      <p class="q" style="font-size:34px">${dest}</p>
+      ${ek<ROUTE.stops.length-1?`<p class="hint">Les faltaron ${Math.round((1-fr)*ROUTE.km).toLocaleString("es-AR")} km para Madrid.</p>`:""}
+      <div style="font-size:80px;font-weight:800;line-height:.9;color:var(--gold);font-variant-numeric:tabular-nums">${pct}%</div>
+      <p class="hint">De sintonía: ${t}. ${hits} clavadas en ${S.answered} preguntas.</p>
+      <button class="big" id="again">Jugar otra partida</button>
+    </div></div>`;
+  $("again").onclick=()=>go({step:"code",code:"",i:0,pts:0,answered:0,scored:{},phase:"play",pick:null,bet:""});
+}
+
+// si se recarga el celu, retoma donde estaba
+render();
+</script>
+</body>
+</html>

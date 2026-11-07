@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Versión para compartir pantalla en la videollamada.">
+<meta property="og:title" content="Adiviná qué dice el otro · Compu">
+<meta property="og:description" content="Versión para compartir pantalla en la videollamada.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ivanbonadeo.github.io/correo-aereo/">
+<meta property="og:image" content="https://ivanbonadeo.github.io/correo-aereo/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Adiviná qué dice el otro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Correo aéreo nocturno: cielo azul noche, postal de papel con borde par avion, avión dorado que cruza el océano */
+  --night:#14213d;
+  --night-2:#1d2d52;
+  --paper:#fbf7ee;
+  --ink:#1b2440;
+  --ink-soft:#5a6280;
+  --red:#d64933;
+  --blue:#2e5aac;
+  --gold:#f2b84b;
+  --ok:#2f8f5b;
+  --font-display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-hand:"Caveat", "Segoe Print", cursive;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow-x:hidden}
+body{
+  background:var(--night);
+  background-image:radial-gradient(circle at 20% 10%, rgba(242,184,75,.08), transparent 40%),
+                   radial-gradient(circle at 85% 90%, rgba(46,90,172,.25), transparent 45%);
+  color:var(--paper);
+  font-family:var(--font-display);
+  display:flex;flex-direction:column;
+}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.wrap{width:min(1100px,100% - 32px);margin:0 auto;flex:1;display:flex;flex-direction:column;gap:20px;padding:20px 0 16px}
+
+/* ---------- Vuelo (medidor de sintonía) ---------- */
+.flight{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px}
+.city{font-family:var(--font-hand);font-size:clamp(20px,2.4vw,28px);color:var(--gold);line-height:1;text-align:center}
+.city small{display:block;font-family:var(--font-display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(251,247,238,.6);margin-top:4px}
+.track{position:relative;height:34px;margin:0 22px}
+.wp{position:absolute;top:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
+.wp i{display:block;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--night);border:2px solid rgba(251,247,238,.5);transition:all .4s}
+.wp em{position:absolute;top:10px;font-style:normal;font-size:12px;font-weight:600;white-space:nowrap;color:rgba(251,247,238,.5);transition:color .4s}
+.wp:nth-child(even) em{top:auto;bottom:10px}
+.wp.on i{background:var(--gold);border-color:var(--gold)}
+.wp.on em{color:var(--gold)}
+.flight .meta{margin-top:14px}
+.toast{position:fixed;left:50%;bottom:18px;z-index:20;transform:translate(-50%,160%);background:var(--paper);color:var(--ink);border-radius:14px;padding:14px 22px 14px 18px;
+  box-shadow:0 14px 40px rgba(0,0,0,.45);display:flex;gap:14px;align-items:center;max-width:min(92vw,620px);transition:transform .5s cubic-bezier(.2,1.3,.4,1)}
+.toast.show{transform:translate(-50%,0)}
+.toast .k{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.toast .c{font-family:var(--font-hand);font-size:34px;line-height:1;color:var(--blue)}
+.toast .l{font-size:16px;line-height:1.3}
+.track::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:3px dashed rgba(251,247,238,.35)}
+.track .done{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;background:var(--gold);border-radius:2px;transition:width .9s cubic-bezier(.3,.8,.3,1)}
+.plane{position:absolute;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;transition:left .9s cubic-bezier(.3,.8,.3,1);filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.meta{display:flex;justify-content:space-between;font-size:14px;color:rgba(251,247,238,.7);font-variant-numeric:tabular-nums}
+.meta b{color:var(--gold)}
+
+/* ---------- Postal ---------- */
+.airmail{
+  padding:12px;border-radius:14px;
+  background:repeating-linear-gradient(135deg,var(--red) 0 22px,var(--paper) 22px 34px,var(--blue) 34px 56px,var(--paper) 56px 68px);
+  box-shadow:0 18px 50px rgba(0,0,0,.45);
+}
+.card{background:var(--paper);color:var(--ink);border-radius:6px;overflow:hidden;padding:clamp(20px,3.2vw,40px);position:relative;min-height:340px;display:flex;flex-direction:column;gap:18px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.route{font-family:var(--font-hand);font-size:clamp(24px,2.6vw,32px);line-height:1.15}
+.route .lbl{font-family:var(--font-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);display:block}
+.route .who{color:var(--blue)}
+.route .who.r{color:var(--red)}
+.stamp{
+  flex:none;width:118px;padding:10px 8px;text-align:center;background:var(--blue);color:var(--paper);
+  transform:rotate(3deg);
+  border-radius:4px;outline:2px dashed rgba(251,247,238,.75);outline-offset:-7px;
+  padding:16px 10px;
+}
+.stamp .n{font-size:36px;font-weight:800;line-height:1}
+.stamp .t{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1.2;margin-top:4px}
+.stamp.l5{background:#b8456f} .stamp.l6{background:#1f7a85}
+.stamp.l1{background:var(--red)} .stamp.l2{background:var(--blue)} .stamp.l3{background:#7a4ea3} .stamp.l4{background:var(--ok)}
+.question{font-size:clamp(28px,3.6vw,48px);font-weight:800;line-height:1.12;letter-spacing:-.01em;text-wrap:balance;margin:auto 0}
+.for-tag{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:#f4e3c1;color:#7a5414;border-radius:999px;padding:4px 10px;align-self:flex-start}
+.postmark{
+  position:absolute;right:clamp(10px,2.4vw,30px);top:clamp(10px,1.6vw,22px);
+  width:150px;height:150px;background:rgba(251,247,238,.82);border-radius:50%;border:5px double currentColor;
+  display:grid;place-items:center;text-align:center;font-weight:800;font-size:24px;line-height:1.05;text-transform:uppercase;
+  transform:rotate(-14deg) scale(0);opacity:0;pointer-events:none;
+}
+.postmark small{display:block;font-size:13px;font-weight:600;letter-spacing:.1em;margin-top:4px}
+.postmark.show{animation:stampin .45s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes stampin{from{transform:rotate(-30deg) scale(2.2);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:.92}}
+
+/* ---------- Pasos ---------- */
+.step{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;background:var(--night-2);border-radius:14px;padding:18px 22px}
+.step p{margin:0;font-size:clamp(18px,1.9vw,24px);line-height:1.3;max-width:60ch}
+.step p b{color:var(--gold);font-weight:800}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{border:0;border-radius:12px;padding:14px 22px;font-size:18px;font-weight:800;background:var(--gold);color:var(--night);display:inline-flex;align-items:center;gap:10px}
+.btn:hover{filter:brightness(1.07)}
+.btn kbd{font-family:inherit;font-size:12px;font-weight:600;border:1.5px solid currentColor;border-radius:5px;padding:1px 6px;opacity:.65}
+.btn.hit{background:var(--ok);color:#fff}
+.btn.mid{background:var(--gold)}
+.btn.miss{background:var(--red);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--paper);border:2px solid rgba(251,247,238,.3);font-weight:600}
+.tools{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:13px;color:rgba(251,247,238,.55)}
+.tools .btns .btn{padding:8px 14px;font-size:14px}
+
+/* ---------- Inicio / fin ---------- */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center}
+.hero h1{font-size:clamp(40px,6vw,76px);line-height:.95;letter-spacing:-.03em;margin:0 0 14px;text-wrap:balance}
+.hero h1 em{font-family:var(--font-hand);font-style:normal;color:var(--gold);font-size:1.15em;font-weight:700}
+.hero p{font-size:19px;line-height:1.45;color:rgba(251,247,238,.82);margin:0 0 10px;max-width:46ch}
+.how{display:grid;gap:10px;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
+.how li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:17px;line-height:1.35}
+.how li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--gold);color:var(--night);display:grid;place-items:center;font-weight:800}
+.form{display:grid;gap:14px}
+.form .card{min-height:0;gap:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);display:grid;gap:6px}
+input[type=text]{font-family:var(--font-hand);font-size:28px;color:var(--ink);border:0;border-bottom:2px dashed #c8c0ad;background:transparent;padding:2px 0;width:100%}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{border:2px solid #d8d0bd;background:#fff;border-radius:10px;padding:10px 6px;font-size:15px;font-weight:600;color:var(--ink);line-height:1.2}
+.seg button small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;margin-top:2px}
+.seg button[aria-pressed=true]{border-color:var(--blue);background:#e8eefb}
+.levels{display:flex;flex-wrap:wrap;gap:8px}
+.levels span{font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;color:#fff}
+.end h2{font-size:clamp(34px,5vw,60px);margin:0;line-height:1;letter-spacing:-.02em;text-wrap:balance}
+.end .big{font-size:clamp(70px,11vw,140px);font-weight:800;color:var(--gold);line-height:.9;font-variant-numeric:tabular-nums}
+.end ul{margin:0;padding-left:20px;display:grid;gap:6px;font-size:16px;line-height:1.35;color:var(--ink)}
+.intro .question{font-size:clamp(36px,5vw,64px)}
+[hidden]{display:none !important}
+
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .stamp{width:90px}
+  .postmark{width:110px;height:110px;font-size:17px}
+  .postmark small{font-size:10px}
+}
+@media (max-height:680px) and (min-width:761px){
+  .wrap{gap:12px;padding:12px 0 10px}
+  .card{min-height:250px;gap:12px}
+  .question{font-size:clamp(26px,3.2vw,40px)}
+  .step{padding:12px 18px}
+  .stamp{width:100px;padding:12px 8px}
+  .stamp .n{font-size:28px}
+  .postmark{width:118px;height:118px;font-size:19px}
+  .postmark small{font-size:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation-duration:.01s !important}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path fill="#d64933" d="M21.5 13.2v-1.9l-8.2-5V1.9C13.3 1.1 12.7.5 12 .5s-1.3.6-1.3 1.4v4.4l-8.2 5v1.9l8.2-2.5v4.6l-2.2 1.6v1.6L12 18l3.5.9v-1.6l-2.2-1.6v-4.6z" transform="rotate(90 12 12)"/></svg><div><div class="k">Nueva escala</div><div class="c" id="toastC"></div><div class="l" id="toastL"></div></div></div>
+<div class="wrap">
+
+  <!-- Medidor de vuelo -->
+  <section class="flight" aria-label="Sintonía de la pareja">
+    <div class="city"><span id="cityA">Buenos Aires</span><small id="nameA">Ivan</small></div>
+    <div>
+      <div class="track">
+        <div class="done" id="done" style="width:0%"></div><div id="wps"></div>
+        <svg class="plane" id="plane" style="left:0%" viewBox="0 0 24 24" aria-hidden="true"><path fill="#f2b84b" d="M21.5 13.2v-1.9l-8.2-5V1.9C13.3 1.1 12.7.5 12 .5s-1.3.6-1.3 1.4v4.4l-8.2 5v1.9l8.2-2.5v4.6l-2.2 1.6v1.6L12 18l3.5.9v-1.6l-2.2-1.6v-4.6z" transform="rotate(90 12 12)"/></svg>
+      </div>
+      <div class="meta"><span><b id="pts">0</b> km recorridos · próxima escala: <b id="nextStop">Montevideo</b></span><span id="prog">Pregunta 0 de 0</span></div>
+    </div>
+    <div class="city"><span id="cityB">Madrid</span><small id="nameB">Fran</small></div>
+  </section>
+
+  <!-- INICIO -->
+  <section id="screenStart" class="hero">
+    <div>
+      <h1>Adiviná qué dice <em>el otro</em></h1>
+      <p>Un juego para dos, a distancia. No compiten: juegan en equipo para que el avión cruce el océano.</p>
+      <ol class="how">
+        <li>Sale una pregunta. Uno responde y el otro adivina.</li>
+        <li>El que adivina dice su apuesta en voz alta.</li>
+        <li>El otro responde de verdad. ¿Le pegó?</li>
+        <li>Cada acierto suma kilómetros. El avión pasa por escalas hasta llegar a Madrid.</li>
+      </ol>
+    </div>
+    <form class="form" id="setup">
+      <div class="airmail"><div class="card">
+        <div class="row2">
+          <label for="inA">Juega desde acá<input type="text" id="inA" value="Ivan" autocomplete="off"></label>
+          <label for="inB">Juega desde allá<input type="text" id="inB" value="Fran" autocomplete="off"></label>
+        </div>
+        <label id="lenLbl">Duración del vuelo</label>
+        <div class="seg" role="group" aria-labelledby="lenLbl" id="lenSeg">
+          <button type="button" data-n="2" aria-pressed="false">Corto<small id="lenC">12 preguntas</small></button>
+          <button type="button" data-n="4" aria-pressed="true">Medio<small id="lenM">24 preguntas</small></button>
+          <button type="button" data-n="99" aria-pressed="false">Largo<small id="lenL">las 80</small></button>
+        </div>
+        <label>Escalas del viaje</label>
+        <div class="levels" id="levelChips"></div>
+      </div></div>
+      <button class="btn" type="submit" style="justify-self:start;font-size:22px;padding:16px 30px">Despegar <kbd>Enter</kbd></button>
+      <a href="index.html" style="color:rgba(251,247,238,.6);font-size:14px;justify-self:start">← Volver al inicio</a>
+    </form>
+  </section>
+
+  <!-- JUEGO -->
+  <section id="screenGame" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="airmail"><div class="card" id="card">
+      <div class="head">
+        <div class="route">
+          <span class="lbl">Adivina</span><span class="who" id="guesser">Ivan</span>
+          <span class="lbl" style="margin-top:6px">Responde</span><span class="who r" id="answerer">Fran</span>
+        </div>
+        <div class="stamp" id="stamp"><div class="n" id="stampN">1</div><div class="t" id="stampT">Preguntas absurdas</div></div>
+      </div>
+      <span class="for-tag" id="forTag" hidden>Esta es para ella</span>
+      <div class="question" id="qText">…</div>
+      <div class="postmark" id="postmark"></div>
+    </div></div>
+
+    <div class="step" id="step1">
+      <p id="s1text"><b>Ivan</b>, decí en voz alta: ¿qué creés que va a responder Fran?</p>
+      <div class="btns"><button class="btn" id="btnBet">Ya aposté <kbd>Enter</kbd></button></div>
+    </div>
+    <div class="step" id="step2" hidden>
+      <p id="s2text"><b>Fran</b>, ¡tu respuesta! ¿Le pegó?</p>
+      <div class="btns">
+        <button class="btn hit" data-s="2">Clavada <kbd>1</kbd></button>
+        <button class="btn mid" data-s="1">Más o menos <kbd>2</kbd></button>
+        <button class="btn miss" data-s="0">Ni cerca <kbd>3</kbd></button>
+      </div>
+    </div>
+    <div class="step" id="step3" hidden>
+      <p id="s3text">Listo.</p>
+      <div class="btns"><button class="btn" id="btnNext">Siguiente <kbd>Enter</kbd></button></div>
+    </div>
+
+    <div class="tools">
+      <span>Solo para el que maneja: Enter avanza · 1, 2, 3 puntúan · S saltea · R cambia roles</span>
+      <div class="btns">
+        <button class="btn ghost" id="btnSkip">Saltear</button>
+        <button class="btn ghost" id="btnSwap">Cambiar roles</button>
+        <button class="btn ghost" id="btnQuit">Terminar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTRO DE NIVEL -->
+  <section id="screenLevel" hidden>
+    <div class="airmail"><div class="card intro" style="align-items:flex-start;justify-content:center">
+      <span class="for-tag" id="lvlTag">Escala 1 de 4</span>
+      <div class="question" id="lvlTitle" style="margin:0">Preguntas absurdas</div>
+      <p id="lvlDesc" style="font-size:22px;line-height:1.4;margin:0;color:var(--ink-soft);max-width:50ch"></p>
+      <button class="btn" id="btnLvl" style="margin-top:10px">Vamos <kbd>Enter</kbd></button>
+    </div></div>
+  </section>
+
+  <!-- FIN -->
+  <section id="screenEnd" class="end" hidden>
+    <div class="airmail"><div class="card" style="gap:16px">
+      <span class="for-tag" id="endTag">Aterrizaron</span>
+      <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end">
+        <div class="big" id="endPct">0%</div>
+        <h2 id="endTitle">…</h2>
+      </div>
+      <p id="endLine" style="font-size:20px;margin:0;color:var(--ink-soft)"></p>
+      <div id="endListWrap">
+        <label style="margin-bottom:8px">Las que clavaron</label>
+        <ul id="endList"></ul>
+      </div>
+      <div class="btns"><button class="btn" id="btnAgain">Otro vuelo <kbd>Enter</kbd></button></div>
+    </div></div>
+  </section>
+
+</div>
+
+<script>
+const LEVELS = [
+  {n:1, t:"Preguntas absurdas", c:"l1", color:"#d64933", d:"Hipótesis ridículas. No hay respuesta correcta, solo la del otro."},
+  {n:2, t:"¿Quién de los dos?", c:"l2", color:"#2e5aac", d:"El que responde elige: «yo» o «vos». El otro tiene que adivinar qué va a elegir."},
+  {n:3, t:"¿Qué preferís?", c:"l3", color:"#7a4ea3", d:"Dos opciones, una elección. Parece fácil de adivinar…"},
+  {n:4, t:"Nosotros", c:"l4", color:"#2f8f5b", d:"Recuerdos, planes y lo que nos va a seguir haciendo reír de viejos."},
+  {n:5, t:"Solo vos sabés", c:"l5", color:"#b8456f", kind:"open", d:"¿Cuánto conocés al otro? Acá sí hay respuesta correcta."},
+  {n:6, t:"A la distancia", c:"l6", color:"#1f7a85", kind:"open", d:"Lo que se extraña, lo que se espera y lo que viene."}
+];
+// para: "ambos" (rota) | "ella" (responde siempre la segunda jugadora)
+const Q = [
+  // Escala 1: absurdas
+  [1,"ambos","¿Preferís las fracciones o los decimales?"],
+  [1,"ambos","Si yo fuera una flor y vos fueras alérgico al polen, ¿igual pasarías tiempo conmigo?"],
+  [1,"ambos","Si te tuvieras que volver 2D, ¿qué dimensión perderías?"],
+  [1,"ambos","¿De qué color es tu enjuague bucal favorito?"],
+  [1,"ambos","¿Cuál es la edad más avanzada a la que viste a un perro aprender un truco nuevo?"],
+  [1,"ambos","Si tuvieras que preparar a un extraterrestre para venir a la Tierra y solo le pudieras decir 5 cosas, ¿cuáles serían?"],
+  [1,"ambos","¿Cuánta gente que conocemos creés que tiene banderines de cumpleaños guardados en su casa?"],
+  [1,"ambos","¿Cuál es la comida que peor quedaría convertida en sopa?"],
+  [1,"ambos","Si pudieras estirar cualquier vehículo como una limusina, ¿cuál elegirías?"],
+  [1,"ambos","¿Seguirías conmigo si solo pudiera hablar con frases de Los Simpson, sea cual sea la ocasión?"],
+  [1,"ambos","Jugamos al juego de la silla, queda una sola y la música para justo cuando estamos los dos encima. ¿Me la dejás o sentís que es tuya por derecho?"],
+  [1,"ella","¿Me seguirías queriendo si nunca más me pudiera crecer la barba?"],
+  [1,"ambos","Si un día me despierto y solo puedo hablar en acertijos, ¿cuánto tiempo me aguantarías?"],
+  [1,"ambos","Si me convirtiera en paloma, ¿me dejarías hacerte caca en la cabeza?"],
+  [1,"ambos","¿Me seguirías queriendo si mañana me despierto con 20 años más y vos seguís igual?"],
+  [1,"ambos","¿Me seguirías queriendo si de repente me diera alergia a todas tus comidas favoritas?"],
+  // Escala 2: quién de los dos
+  [2,"ambos","¿Quién de los dos se las arreglaría mejor para agarrar un pájaro sin lastimarlo?"],
+  [2,"ambos","Vamos por la ruta y aparecen vacas. ¿Quién grita «¡VACAS!» primero?"],
+  [2,"ambos","Si fuéramos sombreros, ¿quién tendría el ala más ancha?"],
+  [2,"ambos","¿Quién podría vivir con menos utensilios de cocina?"],
+  [2,"ambos","¿Quién es más probable que caiga sin querer en una estafa piramidal?"],
+  [2,"ambos","¿Quién intentó hacer más medialunas en su vida?"],
+  [2,"ambos","¿A quién le molestaría más tener que sentarse al lado de un desconocido en el cine?"],
+  [2,"ambos","¿Quién es más probable que tenga más de 1.000 mails sin leer?"],
+  [2,"ambos","Si fuéramos baños, ¿quién tendría las juntas de los azulejos más prolijas?"],
+  [2,"ambos","¿A quién le molestaría más un error de continuidad en una peli o una serie?"],
+  [2,"ambos","En uno de esos concursos donde gana el que aguanta más tiempo tocando un objeto, ¿quién se aburre y se va primero?"],
+  [2,"ambos","¿Quién de los dos sobreviviría menos en una isla desierta? (Con honestidad.)"],
+  [2,"ambos","Si trabajáramos juntos, ¿a quién echarían primero?"],
+  [2,"ambos","¿Quién haría más papelón en un programa de juegos en la tele?"],
+  [2,"ambos","Si intercambiáramos placares por una semana, ¿quién se quejaría primero?"],
+  // Escala 3: qué preferís
+  [3,"ambos","¿Qué preferís: casarte conmigo mañana o no verme por 10 años?"],
+  [3,"ambos","¿Qué preferís: leer todos mis pensamientos durante un día o que yo lea los tuyos?"],
+  [3,"ambos","¿Qué preferís: perder todas nuestras fotos juntos o todos nuestros mensajes?"],
+  [3,"ambos","¿Qué preferís: que yo planee todas nuestras citas o todos nuestros viajes?"],
+  [3,"ella","¿Qué preferís: que yo elija todo tu maquillaje o toda tu ropa por el resto de tu vida?"],
+  [3,"ambos","¿Qué preferís: salir siempre con la ropa combinada o con el mismo peinado?"],
+  // Escala 4: nosotros
+  [4,"ambos","Si nos hiciéramos millonarios de un día para el otro, ¿qué es lo más innecesario que compraríamos?"],
+  [4,"ambos","¿Qué es lo más gracioso que hago sin darme cuenta?"],
+  [4,"ambos","Si nuestra relación fuera un reality, ¿cómo lo llamarían los productores?"],
+  [4,"ambos","¿Cuáles serían las peores vacaciones que podríamos planear?"],
+  [4,"ambos","Si tuviéramos un restaurante, ¿cuál sería el plato ridículo del menú?"],
+  [4,"ambos","¿En qué me tengo demasiada confianza sin ningún motivo?"],
+  [4,"ambos","¿Cuál es el recuerdo más gracioso de cuando empezamos a salir?"],
+  [4,"ambos","¿Qué compra ridícula nos emocionaría a los dos en secreto?"],
+  [4,"ambos","Si pudiéramos teletransportarnos a cualquier lugar a cenar esta noche, ¿adónde iríamos?"],
+  [4,"ambos","¿Cuál es la competencia más random que podríamos hacer entre nosotros?"],
+  [4,"ambos","¿De qué nos vamos a seguir riendo cuando tengamos 80?"],
+  // Escala 5: solo vos sabés
+  [5,"ambos","¿Cuál es tu comida favorita de toda la vida?"],
+  [5,"ambos","¿Qué es lo primero que hacés a la mañana cuando te levantás?"],
+  [5,"ambos","Si pudieras escuchar una sola canción por el resto de tu vida, ¿cuál sería?"],
+  [5,"ambos","¿Cuál es tu miedo más irracional?"],
+  [5,"ambos","¿Qué te pone de mal humor más rápido que cualquier cosa?"],
+  [5,"ambos","Si tuvieras un día libre sin nada que hacer, ¿qué harías?"],
+  [5,"ambos","¿Dónde fue nuestra primera cita y qué pedimos?"],
+  [5,"ambos","¿Quién dijo «te quiero» primero, y dónde?"],
+  [5,"ambos","¿Cuál fue nuestra primera pelea tonta?"],
+  [5,"ambos","¿Qué apodo o chiste interno usamos más?"],
+  [5,"ambos","¿Qué fue lo primero que pensaste de mí cuando me conociste?"],
+  [5,"ambos","¿En qué momento te diste cuenta de que te gustaba?"],
+  [5,"ambos","¿Cuál es «nuestra» canción?"],
+  [5,"ambos","¿Qué fue lo primero que me regalaste?"],
+  [5,"ambos","¿Cuál es tu foto favorita de los dos juntos?"],
+  [5,"ambos","¿Qué salida o viaje juntos es el que más te quedó grabado?"],
+  [5,"ambos","¿Qué es lo que más te hace reír de mí?"],
+  [5,"ambos","¿Qué peli o serie que vimos juntos es la que más disfrutaste?"],
+  // Escala 6: a la distancia
+  [6,"ambos","¿Qué es lo que más extrañás de mí en el día a día?"],
+  [6,"ambos","¿Qué es lo primero que vamos a hacer cuando nos volvamos a ver?"],
+  [6,"ambos","¿A qué hora del día pensás más en mí?"],
+  [6,"ambos","¿Qué cosa de mi vida de este lado te da más curiosidad?"],
+  [6,"ambos","¿Qué comida de mi lado te gustaría que te llevara en la valija?"],
+  [6,"ambos","¿Cuál fue la videollamada más larga o más rara que tuvimos?"],
+  [6,"ambos","¿Qué lugar de tu ciudad me querés mostrar primero?"],
+  [6,"ambos","¿Qué es lo más difícil de la distancia para vos?"],
+  [6,"ambos","¿Qué ritual nuestro te hace sentir más cerca?"],
+  [6,"ambos","Cuando nos veamos, ¿qué comida es obligatoria el primer día?"],
+  [6,"ambos","¿Qué mensaje mío es el que más te gusta recibir?"],
+  [6,"ambos","¿Qué te gustaría que hagamos juntos que todavía no hicimos?"],
+  [6,"ambos","Si pudieras aparecer al lado mío por una hora ahora mismo, ¿qué haríamos?"],
+  [6,"ambos","¿Qué cosa de la distancia nos hizo más fuertes?"]
+];
+// Ruta Buenos Aires → Madrid. f = fracción del camino; el avión llega a Madrid con el 70% de los puntos posibles.
+const ROUTE={km:10040,goal:0.7,stops:[
+  {f:.10,c:"Montevideo",l:"Cruzaron el charco. Ya se siente olor a mate."},
+  {f:.28,c:"Río de Janeiro",l:"Escala en Río: caipirinha y foto con el Cristo."},
+  {f:.45,c:"Recife",l:"Última parada en Brasil antes del océano."},
+  {f:.62,c:"Cabo Verde",l:"Mitad del Atlántico. Ya no hay vuelta atrás."},
+  {f:.80,c:"Islas Canarias",l:"¡Tierra española a la vista!"},
+  {f:.91,c:"Lisboa",l:"Un pastel de nata y seguimos, que falta poquito."},
+  {f:1,c:"Madrid",l:"¡Aterrizaron! Por fin juntos."}]};
+function routeFrac(pts,max){return max>0?Math.min(1,pts/(ROUTE.goal*max)):0}
+function stopIndex(fr){let k=-1;ROUTE.stops.forEach((s,i)=>{if(fr>=s.f-1e-9)k=i});return k}
+function stopName(k){return k<0?"Buenos Aires":ROUTE.stops[k].c}
+function stopsMarkup(){return ROUTE.stops.slice(0,-1).map((s,i)=>`<span class="wp" data-i="${i}" style="left:${s.f*100}%"><i></i><em>${s.c}</em></span>`).join("")}
+function markStops(fr){document.querySelectorAll(".wp").forEach(w=>w.classList.toggle("on",fr>=ROUTE.stops[+w.dataset.i].f-1e-9))}
+
+const $ = id => document.getElementById(id);
+let S = null; // estado de la partida
+let perLevel = 4;
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+$("wps").innerHTML=stopsMarkup();
+$("lenC").textContent=(2*LEVELS.length)+" preguntas"; $("lenM").textContent=(4*LEVELS.length)+" preguntas"; $("lenL").textContent="las "+Q.length;
+// chips de niveles
+$("levelChips").innerHTML = LEVELS.map(l=>{
+  const c = Q.filter(q=>q[0]===l.n).length;
+  return `<span style="background:${l.color}">${l.n}. ${l.t} · ${c}</span>`;
+}).join("");
+
+document.querySelectorAll("#lenSeg button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#lenSeg button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");perLevel=+b.dataset.n;
+  });
+});
+
+function show(id){
+  ["screenStart","screenGame","screenLevel","screenEnd"].forEach(s=>$(s).hidden = s!==id);
+  S && (S.screen=id);
+  snapshotSave();
+}
+
+function names(){
+  $("nameA").textContent=S.A; $("nameB").textContent=S.B;
+}
+
+function start(){
+  const A=$("inA").value.trim()||"Ivan", B=$("inB").value.trim()||"Fran";
+  let deck=[];
+  LEVELS.forEach(l=>{
+    const qs=shuffle(Q.filter(q=>q[0]===l.n)).slice(0,perLevel);
+    deck=deck.concat(qs);
+  });
+  S={A,B,deck,i:0,pts:0,max:deck.length*2,turn:Math.random()<.5?0:1,phase:1,hits:[],answered:0,lastLevel:0,screen:"screenLevel"};
+  names(); updateFlight();
+  nextOrLevel();
+}
+
+function curQ(){return S.deck[S.i]}
+
+function nextOrLevel(){
+  if(S.i>=S.deck.length){return finish()}
+  const q=curQ();
+  if(q[0]!==S.lastLevel){
+    S.lastLevel=q[0];
+    const L=LEVELS[q[0]-1];
+    const total=new Set(S.deck.map(d=>d[0])).size;
+    const idx=[...new Set(S.deck.map(d=>d[0]))].indexOf(q[0])+1;
+    $("lvlTag").textContent=`Escala ${idx} de ${total}`;
+    $("lvlTitle").textContent=L.t; $("lvlTitle").style.color=L.color;
+    $("lvlDesc").textContent=L.d;
+    show("screenLevel"); $("btnLvl").focus();
+    return;
+  }
+  renderQ();
+}
+
+function roles(){
+  const q=curQ();
+  // responde: "ella" fuerza a B; si no, alterna
+  const answererIsB = q[1]==="ella" ? true : S.turn===1;
+  return answererIsB ? {g:S.A,a:S.B} : {g:S.B,a:S.A};
+}
+
+function renderQ(){
+  const q=curQ(), L=LEVELS[q[0]-1], r=roles();
+  $("guesser").textContent=r.g; $("answerer").textContent=r.a;
+  $("stamp").className="stamp "+L.c; $("stampN").textContent=L.n; $("stampT").textContent=L.t;
+  $("qText").textContent=q[2];
+  $("forTag").hidden = q[1]!=="ella";
+  $("forTag").textContent = `Esta es para ${S.B}`;
+  $("s1text").innerHTML=`<b>${esc(r.g)}</b>, decí en voz alta: ¿qué creés que va a responder ${esc(r.a)}?`;
+  $("s2text").innerHTML=`<b>${esc(r.a)}</b>, ¡tu respuesta de verdad! ¿${esc(r.g)} le pegó?`;
+  $("postmark").className="postmark"; $("postmark").innerHTML="";
+  setPhase(S.phase||1);
+  show("screenGame");
+  updateFlight();
+}
+
+function setPhase(p){
+  S.phase=p;
+  $("btnSwap").disabled = p!==1;
+  $("step1").hidden=p!==1; $("step2").hidden=p!==2; $("step3").hidden=p!==3;
+  const f = p===1?$("btnBet"):p===2?document.querySelector("#step2 .btn"):$("btnNext");
+  f && f.focus({preventScroll:true});
+  snapshotSave();
+}
+
+function score(s){
+  if(S.phase!==2) return;
+  const before=stopIndex(routeFrac(S.pts,S.max));
+  S.pts+=s; S.answered++;
+  const after=stopIndex(routeFrac(S.pts,S.max));
+  const pm=$("postmark");
+  const r=roles();
+  if(s===2){pm.style.color="#2f8f5b";pm.innerHTML="¡Clavada!<small>+2 · telepatía</small>";S.hits.push(curQ()[2]);
+    $("s3text").innerHTML=`<b>${esc(r.g)}</b> le leyó la mente a ${esc(r.a)}.`}
+  else if(s===1){pm.style.color="#b07a12";pm.innerHTML="Casi<small>+1 · cerquita</small>";
+    $("s3text").innerHTML=`Cerca. El avión avanza un poquito.`}
+  else {pm.style.color="#d64933";pm.innerHTML="Ni cerca<small>0 · turbulencia</small>";
+    $("s3text").innerHTML=`Turbulencia. ¡Ahora ${esc(r.a)} tiene que explicar esa respuesta!`}
+  pm.classList.remove("show"); void pm.offsetWidth; pm.classList.add("show");
+  if(after>before){const st=ROUTE.stops[after];
+    $("s3text").innerHTML+=` <br><b>Nueva escala: ${esc(st.c)}.</b> ${esc(st.l)}`;
+    showToast(st)}
+  updateFlight();
+  setPhase(3);
+}
+
+function next(){
+  if(curQ()[1]!=="ella") S.turn=1-S.turn;
+  S.i++; S.phase=1;
+  nextOrLevel();
+}
+function skip(){if(S.phase===3)return next();S.max-=2;S.i++;S.phase=1;nextOrLevel()}
+function swap(){if(S.phase!==1)return;S.turn=1-S.turn;renderQ()}
+
+let toastT=null;
+function showToast(st){$("toastC").textContent=st.c;$("toastL").textContent=st.l;const t=$("toast");t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),3800)}
+function updateFlight(){
+  const fr = S ? (S.endFrac ?? routeFrac(S.pts,S.max)) : 0;
+  $("plane").style.left=(fr*100)+"%"; $("done").style.width=(fr*100)+"%"; markStops(fr);
+  $("pts").textContent = Math.round(fr*ROUTE.km).toLocaleString("es-AR");
+  const k=stopIndex(fr); $("nextStop").textContent = k>=ROUTE.stops.length-1 ? "¡llegaron!" : ROUTE.stops[k+1].c;
+  $("prog").textContent = S ? `Pregunta ${Math.min(S.i+1,S.deck.length)} de ${S.deck.length}` : "";
+}
+
+function finish(){
+  const fr = routeFrac(S.pts,S.max), k = stopIndex(fr);
+  S.endFrac = S.endFrac ?? fr;
+  S.max = S.answered*2;
+  const pct = S.max>0 ? Math.round(S.pts/S.max*100) : 0;
+  $("endPct").textContent=pct+"%";
+  let t;
+  if(pct>=85) t="Telepatía de pareja de 50 años";
+  else if(pct>=65) t="Se conocen de memoria";
+  else if(pct>=45) t="Muy bien sintonizados";
+  else if(pct>=25) t="Hay señal, con algo de interferencia";
+  else t="Hay que jugar más seguido";
+  const ek=stopIndex(S.endFrac);
+  $("endTitle").textContent = ek>=ROUTE.stops.length-1 ? "¡Aterrizaron en Madrid!" : (ek<0 ? "El avión recién despega" : `Llegaron hasta ${stopName(ek)}`);
+  $("endTag").textContent = ek>=ROUTE.stops.length-1 ? "Vuelo completo" : `Les faltaron ${Math.round((1-S.endFrac)*ROUTE.km).toLocaleString("es-AR")} km para Madrid`;
+  $("endLine").textContent=`${pct}% de sintonía: ${t.toLowerCase()}. ${S.hits.length} clavadas en ${S.answered} preguntas · ${Math.round(S.endFrac*ROUTE.km).toLocaleString("es-AR")} km recorridos.`;
+  updateFlight();
+  $("endListWrap").hidden = !S.hits.length;
+  $("endList").innerHTML=S.hits.slice(0,8).map(h=>`<li>${esc(h)}</li>`).join("")+(S.hits.length>8?`<li style="list-style:none;color:var(--ink-soft)">y ${S.hits.length-8} más</li>`:"");
+  show("screenEnd"); $("btnAgain").focus();
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+$("setup").addEventListener("submit",e=>{e.preventDefault();start()});
+$("btnBet").onclick=()=>setPhase(2);
+document.querySelectorAll("#step2 .btn").forEach(b=>b.onclick=()=>score(+b.dataset.s));
+$("btnNext").onclick=next;
+$("btnLvl").onclick=renderQ;
+$("btnSkip").onclick=skip;
+$("btnSwap").onclick=swap;
+$("btnQuit").onclick=finish;
+$("btnAgain").onclick=()=>{S=null;$("toast").classList.remove("show");updateFlight();show("screenStart");$("inA").focus()};
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  const scr=["screenStart","screenGame","screenLevel","screenEnd"].find(s=>!$(s).hidden);
+  const k=e.key.toLowerCase();
+  if(scr==="screenLevel" && (k==="enter"||k===" ")){e.preventDefault();renderQ()}
+  else if(scr==="screenEnd" && k==="enter"){e.preventDefault();$("btnAgain").click()}
+  else if(scr==="screenStart" && k==="enter"){e.preventDefault();start()}
+  else if(scr==="screenGame"){
+    if(k==="enter"||k===" "){e.preventDefault(); if(S.phase===1)setPhase(2); else if(S.phase===3)next();}
+    else if(S.phase===2 && ["1","2","3"].includes(k)){score([2,1,0][+k-1])}
+    else if(k==="s"){skip()}
+    else if(k==="r"){swap()}
+  }
+});
+
+// Mantener la partida si la página se actualiza
+function snapshotSave(){}
+try{ window.claude?.hot?.snapshot(()=>S?{S}:{}); }catch(_){}
+function boot(data){
+  if(data && data.S){
+    S=data.S; names(); updateFlight();
+    const scr=S.screen;
+    if(scr==="screenEnd") finish();
+    else if(scr==="screenLevel"){ S.lastLevel=0; nextOrLevel(); }
+    else renderQ();
+  }
+}
+try{ window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {}); }catch(_){}
+</script>
+</body>
+</html>
